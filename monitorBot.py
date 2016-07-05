@@ -52,4 +52,4 @@ while True:
         print "Something went wrong..."
         pass
 
-    time.sleep(30)
+    time.sleep(60)
