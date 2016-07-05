@@ -1,1 +1,1 @@
-web: python monitorBot.py
+web: python monitorBot.py ${PORT}
