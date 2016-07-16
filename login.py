@@ -4,7 +4,7 @@ import gmail
 
 def reddit_login():
     r = praw.Reddit(user_agent="Finding monitor sales by /u/nosas")
-    r.login = ("lol_persia", "nice89")
+    # r.login = ("lol_persia", "nice89")
     return r
 
 

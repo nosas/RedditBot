@@ -1,55 +1,49 @@
-import praw
 import login
 import time
-import gmail
 import email
+import datetime
 
 r = login.reddit_login()
-gm = login.gmail_login()
-
 desired_items = ["xg270hu", "mg278q", "xl2730z"]
-cache = []
 
 
 def run_bot():
     subreddit = r.get_subreddit('buildapcsales')
     new_submissions = subreddit.get_new(limit=5)
-    print "---------- Current Submissions ----------"
+    print "    ---------------- Current Submissions ----------------"
+    try:
+        with open('cache.txt') as f:
+            cacheFileData = f.readlines()
+    except:
+        cacheFileData = []
 
     for submission in new_submissions:
-        print str(submission)
-        foundMatch = any(string in str(submission).lower() for string in desired_items)
+        print "    " + str(submission)
+        foundMatch = any(string.lower() in str(submission).lower() for string in desired_items)
 
-        if foundMatch and submission not in cache:
-            print "^^^^^^^^ FOUND A MATCH ^^^^^^^^^^^^^^"
-            cache.append(submission)
+        if foundMatch and str(submission.id + "\n") not in cacheFileData:
+            print "    ^^^^^^^^ FOUND A MATCH ^^^^^^^^^^^^^^"
+
             url = "https://www.reddit.com/r/buildapcsales/comments/" + str(submission.id)
             msg = email.message.Message()
             msg.set_payload(url)
+            gm = login.gmail_login()
             gm.send(msg, ['sasonreza@gmail.com'])
-            print "E-mail sent\n"
+            print "    E-mail sent"
 
-        # for word in str(submission).split():
-        #     """
-        #     If the word is a desired item I'm looking for, and the current
-        #     submission hasn't already been looked at, email the URL to myself.
-        #     """
-        #     if word.lower() in desired_items and submission not in cache:
-        #         print "############got it"
-        #
+            with open('cache.txt', 'a+') as cacheFile:
+                cacheFile.write(str(submission.id) + "\n")
+                print "    Added to cache\n"
 
 
 while True:
     try:
-        print
-        print "---" * 10
-        print "Refreshing submissions..."
-        print "Cache Size = " + str(len(cache))
-        print "---" * 10
-        print
+        print "{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now())
         run_bot()
+        print
+        print
     except:
         print "Something went wrong..."
         pass
 
-    time.sleep(60)
+    time.sleep(20)
