@@ -1,6 +1,6 @@
 import time
 import praw
-from Projects.RedditBot.login import reddit_login
+from login import reddit_login
 
 """
 TODO:
