@@ -7,8 +7,11 @@ TODO:
     # - Figure out how to approve posts
     # - Create message outline to send to user (probably copy from old flair bot)
     # - Add some proper documentation
-        + Need cleaner documentation. Will add tomorrow.
-    - Push to GitHub/fix Repo
+    # - Push to GitHub/fix Repo
+    - Need cleaner, more informative documentation
+    - Fix the removal of post IDs from removed_submissions list
+    - Automate the process
+    - Add customizable bot options for potentional future users
 """
 
 subreddit_name = "NosasFlairTest"
