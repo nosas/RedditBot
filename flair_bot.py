@@ -92,7 +92,7 @@ class Bot:
 
     @staticmethod
     # Opens a file and reads the list from it in order to retrieve the removed/processed_submissions list
-    def open_submissions_list(submissions_file):
+    def read_submission_list_from_file(submissions_file):
         try:
             with open(submissions_file, 'r') as f:
                 try:
@@ -117,10 +117,10 @@ class Bot:
 
     def run(self):
         print "Retrieving removed submissions from file ..."
-        self.removed_submissions = self.open_submissions_list(removed_submissions_filename)
+        self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
 
         print "Retrieving processed submissions from file ..."
-        self.processed_submissions = self.open_submissions_list(processed_submissions_filename)
+        self.processed_submissions = self.read_submission_list_from_file(processed_submissions_filename)
 
         print "Checking new submissions ..."
         self.check_new_submissions()
