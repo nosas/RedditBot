@@ -1,4 +1,5 @@
 import time
+import datetime
 import praw
 from login import reddit_login
 
@@ -36,21 +37,18 @@ class Bot():
 
     # Initialize Reddit
     r = praw.Reddit(user_agent="A flair mod by /u/nosas for /r/NosasFlairTest")
-    reddit_login(r)
+    # reddit_login(r)
+    print "Logging in ...\n"
     subreddit = r.get_subreddit(subreddit_name)
-
     # Grab the 10 most recent posts on the subreddit and check the submissions for flairs
     def check_new_submissions(self):
         # Grab the 10 most recents submissions
         for submission in self.subreddit.get_new(limit=1):
-            print "---" * 6
-            print submission
-
+            print "Getting new submissions ..."
             # If the current post hasn't been processed yet, then see if the OP has a flair
             if submission.id not in self.processed_submissions:
                 # If OP has no flair, remove submission, notify user of removal, and add ID to removed_submission list
-                # TODO: Change to None instead of not None
-                if submission.author_flair_text is not None:
+                if submission.author_flair_text is None:
                     try:
                         author = submission.author
                         if author is None:
@@ -60,14 +58,14 @@ class Bot():
                         continue
 
                     # Notify user why their post was deleted
-                    self.r.send_message(author, remove_post_subject, remove_post_body.format(
-                        submission.url, subreddit_name, self.create_mod_mail_url(submission.url)))
-
+                    # self.r.send_message(author, remove_post_subject, remove_post_body.format(
+                    #     submission.url, subreddit_name, self.create_mod_mail_url(submission.url)))
+                    print "Sending message to author ..."
                     # Delete the post and add the ID to the removed_submissions list
-                    submission.remove()
+                    # submission.remove()
+                    print "Removed submission: {0}".format(submission)
                     self.removed_submissions.append(submission.id)
-                    print "REMOVED"
-                    print "ID: {0}".format(submission.id)
+        print "Finished new submissions"
 
     # Check the removed submission to see if they've added flairs yet
     # If they have, then approve the submission.
@@ -78,17 +76,14 @@ class Bot():
             url = "https://www.reddit.com/r/{0}/comments/{1}".format(subreddit_name, submission_id)
             submission = self.r.get_submission(url=url)
 
-            print "---" * 6
-            print submission
-
             # If OP has a flair now, approve their post, add the ID to processed_submissions list
             # This will prevent it from being processed/removed again.
             # TODO: Change to None instead of not None
             if submission.author_flair_text is not None:
-                submission.approve()
+                # submission.approve()
+                print "Approved submission: {0}".format(submission)
                 self.processed_submissions.append(submission_id)
-                print "APPROVED"
-                print "ID: {0}".format(submission.id)
+        print "Finished removed submissions"
 
 
     def create_mod_mail_url(self, post_url):
@@ -97,24 +92,21 @@ class Bot():
         return mod_mail_url
 
     def run(self):
-        print
-        print "===" * 8
-        print "CHECKING NEW SUBMISSIONS"
+        print "Checking new submissions ..."
         self.check_new_submissions()
 
-        print
-        print "===" * 8
-        print "\nCHECKING REMOVED SUBMISSIONS"
+        print "Checking removed submissions ..."
         self.check_removed_submissions()
-
 
 # Master bot process
 if __name__ == '__main__':
     reddit_bot = Bot()
     while True:
+        print('{:%H:%M:%S %b %d %Y}'.format(datetime.datetime.now()))
         reddit_bot.run()
-        print("Sleeping for 10 seconds")
-        time.sleep(10)
+        print("Sleeping for 60 seconds\n")
+        print "= = " * 10
+        time.sleep(60)
 
 # new_removed_submissions = [item for item in removed_submissions if item not in processed_submissions]
 # removed_submissions = new_removed_submissions
