@@ -78,8 +78,9 @@ class Bot:
 
         print "    Finished removed submissions"
 
+    @staticmethod
     # Method to create a URL that the user can easily send to mods' mailboxes to access their removed submission
-    def create_mod_mail_url(self, submission_url):
+    def create_mod_mail_url(submission_url):
         mod_mail_url = "http://www.reddit.com/message/compose/?to=/r/{0}&subject={1}&message={2}"\
                         .format(subreddit_name, mod_mail_subject, submission_url)
         return mod_mail_url
@@ -89,8 +90,9 @@ class Bot:
         new_removed_submissions = [item for item in self.removed_submissions if item not in self.processed_submissions]
         self.removed_submissions = new_removed_submissions
 
+    @staticmethod
     # Opens a file and reads the list from it in order to retrieve the removed/processed_submissions list
-    def open_submissions_list(self, submissions_file):
+    def open_submissions_list(submissions_file):
         try:
             with open(submissions_file, 'r') as f:
                 try:
@@ -107,8 +109,9 @@ class Bot:
 
         return submissions_list
 
+    @staticmethod
     # Write the removed/processed_submissions to their
-    def write_submissions_list_to_file(self, submissions_list, submissions_file):
+    def write_submissions_list_to_file(submissions_list, submissions_file):
         with open(submissions_file, 'w') as f:
             f.write(str(submissions_list))
 
