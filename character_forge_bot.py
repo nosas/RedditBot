@@ -24,7 +24,8 @@ TODO:
 subreddit_name = "nosasflairtest"
 
 # Alternative Titles Weekly Showdown #1: NAME1 v NAME2
-submission_title = "Weekly Showdown Thread: {:%d/%m/%Y}".format(date.today())
+# submission_title = "Weekly Showdown Thread: {:%d/%m/%Y}".format(date.today())
+submission_title = "Weekly Showdown #{number}: {name1} v {name2}"
 
 print submission_title
 submission_text = ""
@@ -39,20 +40,23 @@ max_days_since_matchup = 90
 
 class Bot:
 
-    current_matchup = []
-    previous_matchups = {}
+    def __init__(self):
+        self.current_matchup = []
+        self.previous_matchups = {}
 
-    # r = praw.Reddit(user_agent="Automatic showdown posting tool for /r/CharacterForge by /u/nosas")
-    print("Logging in ...\n")
-    # reddit_login(r)
-    # subreddit = r.get_subreddit(subreddit_name)
+        self.r = praw.Reddit(user_agent="Automatic showdown posting tool for /r/CharacterForge by /u/nosas")
+        print("Logging in ...\n")
+        reddit_login(self.r)
+        self.subreddit = self.r.get_subreddit(subreddit_name)
 
-    # Create a new stickied submission with bottom=True because we don't want to remove the first sticky
+    # Post a new stickied submission with bottom=True because we don't want to remove the first sticky
     # Actually, the param doesn't matter. It will never replace the top unless the top sticky is removed
     # However, still keeping the param there for clarity.
-    def create_sticky_submission(self):
+    def post_sticky_submission(self):
         print("Posting submission ...")
-        new_submission = self.r.submit(subreddit_name, submission_title, submission_text)
+        new_submission = self.r.submit(subreddit_name, submission_title.format(
+            number=1, name1=self.current_matchup[0], name2=self.current_matchup[1]),
+                                       submission_text)
         print("    Finished posting submission")
 
         print("Stickying submission ...")
@@ -74,6 +78,7 @@ class Bot:
         print ("Creating match-up")
         self.current_matchup = tuple(sorted(random.sample(names_list, 2)))
         print "    Current match-up : {0} vs. {1}".format(self.current_matchup[0], self.current_matchup[1])
+        print submission_title.format(number=1, name1=self.current_matchup[0], name2=self.current_matchup[1])
 
         # If the two haven't been matched before, continue with them as the current match-up
         if self.current_matchup not in self.previous_matchups:
@@ -88,7 +93,6 @@ class Bot:
         else:
             print("    Oops! Duplicate match-up.\n    Creating another match-up ...")
             self.create_matchup()
-
 
         self.write_previous_matchups_to_file()
 
@@ -118,10 +122,10 @@ class Bot:
 
     def run(self):
         self.read_previous_matchups_from_file()
-
         self.create_matchup()
         print("    Finished creating match-up")
-        # self.create_sticky_submission()
+        self.post_sticky_submission()
+        self.post_comment()
         # self.write_previous_matchups_to_file()
 
 if __name__ == '__main__':

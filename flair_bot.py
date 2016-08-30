@@ -22,15 +22,17 @@ mod_mail_subject = "Flair Added"
 
 
 class Bot:
-    # Global variables to keep track of submissions that are removed/resolved
-    removed_submissions = []
-    processed_submissions = []
 
-    # Initialize Reddit
-    r = praw.Reddit(user_agent="A flair mod by /u/nosas for /r/NosasFlairTest")
-    print "Logging in ...\n"
-    reddit_login(r)
-    subreddit = r.get_subreddit(subreddit_name)
+    def __init__(self):
+        # Global variables to keep track of submissions that are removed/resolved
+        self.removed_submissions = []
+        self.processed_submissions = []
+
+        # Initialize Reddit
+        self.r = praw.Reddit(user_agent="A flair mod by /u/nosas for /r/NosasFlairTest")
+        print "Logging in ...\n"
+        reddit_login(self.r)
+        self.subreddit = self.r.get_subreddit(subreddit_name)
 
     # Grab the 10 most recent posts on the subreddit and check the submissions for flairs
     def check_new_submissions(self):
