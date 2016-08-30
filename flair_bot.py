@@ -37,15 +37,16 @@ mod_mail_subject = "Flair Added"
 class Bot:
 
     def __init__(self):
-        # Global variables to keep track of submissions that are removed/resolved
-        self.removed_submissions = []
-        self.processed_submissions = []
-
         # Initialize Reddit
         self.r = praw.Reddit(user_agent="A flair mod by /u/nosas for /r/NosasFlairTest")
         print "Logging in ...\n"
         reddit_login(self.r)
         self.subreddit = self.r.get_subreddit(SUBREDDIT_NAME)
+
+        # Global variables to keep track of submissions that are removed/resolved
+        self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
+        self.processed_submissions = self.read_submission_list_from_file(processed_submissions_filename)
+
 
     # Grab the 10 most recent posts on the subreddit and check the submissions for flairs
     def check_new_submissions(self):
@@ -131,18 +132,14 @@ class Bot:
             f.write(str(submissions_list))
 
     def run(self):
-        print "Retrieving removed submissions from file ..."
-        self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
-
-        print "Retrieving processed submissions from file ..."
-        self.processed_submissions = self.read_submission_list_from_file(processed_submissions_filename)
-
         print "Checking new submissions ..."
         self.check_new_submissions()
 
         print "Checking removed submissions ..."
         self.check_removed_submissions()
 
+        # TODO: Move the following 3 commands into check_removed_submissions method
+        # No need for them all to be in the run method
         print "Updating removed submissions list ..."
         self.update_removed_submissions()
 
