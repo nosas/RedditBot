@@ -1,7 +1,6 @@
 import praw
 from datetime import date
 import random
-import json
 from login import reddit_login
 
 """
@@ -12,7 +11,7 @@ TODO:
 # - Randomly select 2 names from a list
 # - Keep track of match-ups to prevent duplicate match-ups after X amount of time
 # - Read and write previous match-ups to file
-- Submit the current matchup in the post's title/body
+# - Submit the current matchup in the post's title/body
 - Add more documentation
 - Clean up clutter
 
@@ -27,11 +26,9 @@ subreddit_name = "nosasflairtest"
 # submission_title = "Weekly Showdown Thread: {:%d/%m/%Y}".format(date.today())
 submission_title = "Weekly Showdown #{number}: {name1} v {name2}"
 
-print submission_title
 submission_text = ""
 comment_text = "# **Off-topic Discussion**"
 
-names_list = ["jon", "tim", "mom", "dad", "etc", "blah", "tony"]
 names_list_filename = "names_list.txt"
 
 previous_matchups_filename = "previous_matchups.txt"
@@ -43,11 +40,12 @@ class Bot:
     def __init__(self):
         self.current_matchup = []
         self.previous_matchups = {}
+        self.names_list = self.read_names_list_from_file()
 
-        self.r = praw.Reddit(user_agent="Automatic showdown posting tool for /r/CharacterForge by /u/nosas")
+        # self.r = praw.Reddit(user_agent="Automatic showdown posting tool for /r/CharacterForge by /u/nosas")
         print("Logging in ...\n")
-        reddit_login(self.r)
-        self.subreddit = self.r.get_subreddit(subreddit_name)
+        # reddit_login(self.r)
+        # self.subreddit = self.r.get_subreddit(subreddit_name)
 
     # Post a new stickied submission with bottom=True because we don't want to remove the first sticky
     # Actually, the param doesn't matter. It will never replace the top unless the top sticky is removed
@@ -76,7 +74,7 @@ class Bot:
     def create_matchup(self):
 
         print ("Creating match-up")
-        self.current_matchup = tuple(sorted(random.sample(names_list, 2)))
+        self.current_matchup = tuple(sorted(random.sample(self.names_list, 2)))
         print "    Current match-up : {0} vs. {1}".format(self.current_matchup[0], self.current_matchup[1])
         print submission_title.format(number=1, name1=self.current_matchup[0], name2=self.current_matchup[1])
 
@@ -103,6 +101,12 @@ class Bot:
         matchup_date = date(int(matchup_date[0]), int(matchup_date[1][-1]), int(matchup_date[2]))
         return (date.today() - matchup_date).days
 
+    @staticmethod
+    def read_names_list_from_file(self):
+        with open(names_list_filename, 'r') as f:
+            names_list = [name.strip() for name in f.readlines()]
+            return names_list
+
     def read_previous_matchups_from_file(self):
         try:
             with open(previous_matchups_filename, 'r') as f:
@@ -124,8 +128,8 @@ class Bot:
         self.read_previous_matchups_from_file()
         self.create_matchup()
         print("    Finished creating match-up")
-        self.post_sticky_submission()
-        self.post_comment()
+        # self.post_sticky_submission()
+        # self.post_comment()
         # self.write_previous_matchups_to_file()
 
 if __name__ == '__main__':
