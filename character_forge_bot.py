@@ -9,38 +9,26 @@ Actions required to implement:
     3. The PRAW module will need to be installed on the machine running this script.
         3a. PRAW can be found here: https://praw.readthedocs.org/en/latest/
             Don't know how to install Python modules on Windows? Watch this: http://www.youtube.com/watch?v=ddpYVA-7wq4
+    4. Create a name_list.txt in the same folder as this script.
+        4a. Add only one name per line (spaces are okay in the names).
+    5. Create a weekly_counter.txt in the same folder as this script.
+        5a. Start the weekly counter at 1, or whatever number you please.
+            The script will automatically increment the counter each time it's ran.
 """
 
 import praw
 from datetime import date
 import random
-# TODO: Remove this import
-from login import reddit_login
 
-# TODO: Remove the following block of TODO list
-"""
-# - Learn how to create a sticky/announcement post
-#     + Then comment on the newly created sticky/announcement
-# - Choose between text file and keeping list within (Text file for sure)
-# - Randomly select 2 names from a list
-# - Keep track of match-ups to prevent duplicate match-ups after X amount of time
-# - Read and write previous match-ups to file
-# - Submit the current matchup in the post's title/body
-# - Add more documentation
-# - Clean up clutter
-# - Allow for customization in text
-
-v1.0 is (nearly) finished!
-"""
 
 # Global variables, set to be customizable for user
 USERNAME = ""
 PASSWORD = ""
 SUBREDDIT_NAME = "CharacterForge"
 
-# Alternative Titles Weekly Showdown #1: NAME1 v NAME2
-# submission_title = "Weekly Showdown Thread: {:%d/%m/%Y}".format(date.today())
+# Alternative Title = "Weekly Showdown Thread: {:%d/%m/%Y}".format(date.today())
 submission_title = "Weekly Showdown #{number}: {name1} v {name2}"
+
 # When editing the submission text, make sure to add two \n in order to create a new line on Reddit.
 submission_text = "This week's match-up is {name1} v {name2}. \n\n" \
                   "{name1} is known to be ....\n\n" \
@@ -52,6 +40,17 @@ comment_text = "# **Off-topic Discussion**"
 names_list_filename = "names_list.txt"
 previous_matchups_filename = "previous_matchups.txt"
 max_days_since_matchup = 90
+
+# If -1 ever shows up in the title, something went wrong.
+weekly_counter = -1
+try:
+    weekly_counter = int(open("weekly_counter.txt", 'r').read())
+    print "Incrementing weekly counter to {0}".format(weekly_counter+1)
+    open("weekly_counter.txt", 'w').write(str(weekly_counter+1))
+except IOError:
+    print "ERROR: Can't open/find weekly_counter file!"
+    print "       Make sure \"weekly_counter.txt\" is in the same folder as \"character_forge_bot.py\"."
+    exit(-1)
 
 
 class Bot:
@@ -66,9 +65,8 @@ class Bot:
 
         self.r = praw.Reddit(user_agent="Automatic weekly showdown posting tool for /r/CharacterForge by /u/nosas")
         print("Logging in ...\n")
-        # self.r.login(USERNAME, PASSWORD)
-        # TODO: Remove the following line of code
-        reddit_login(self.r)
+
+        self.r.login(USERNAME, PASSWORD, disable_warning=True)
         self.subreddit = self.r.get_subreddit(SUBREDDIT_NAME)
 
     # Post a new stickied submission with bottom=True because we don't want to remove the first sticky.
@@ -81,7 +79,8 @@ class Bot:
         # The title and text have .format(name1=, name2=) in order to replace all instances of {name1} and {name2} in
         # the strings with the appropriate names. See submission_title for an example of how to format the string.
         new_submission = self.r.submit(SUBREDDIT_NAME,
-                                       submission_title.format(number=1, name1=self.name1, name2=self.name2),
+                                       submission_title.format(number=weekly_counter,
+                                                               name1=self.name1, name2=self.name2),
                                        submission_text.format(name1=self.name1, name2=self.name2))
         print("    Finished posting submission")
 
@@ -115,7 +114,8 @@ class Bot:
 
         print "    Current match-up : {0} vs. {1}".format(self.name1, self.name2)
         # Not sure how the title wants to be formatted. Will need to create a method to increment the counter.
-        print "    Current title:   : " + submission_title.format(number=1, name1=self.name1, name2=self.name2)
+        print "    Current title:   : " + submission_title.format(number=weekly_counter,
+                                                                  name1=self.name1, name2=self.name2)
 
         # If the two haven't been matched before, continue with them as the current match-up
         if self.current_matchup not in self.previous_matchups:
