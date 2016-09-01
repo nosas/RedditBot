@@ -1,7 +1,8 @@
-import login
 import time
 import email
 import datetime
+
+from RedditBots import login
 
 r = login.reddit_login()
 desired_items = ["xg270hu", "mg278q", "xl2730z"]
