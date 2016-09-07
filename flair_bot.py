@@ -18,18 +18,19 @@ from login import reddit_login
 """
 TODO:
     - Create functionality for users to reply to bot and ask for a specific flair
+    - Add signature to bot's post
     - Add customizable bot options for potential future users/developers?
     - Allow bot to run for certain # of cycles, then clean memory after # of cycles to prevent eating of memory??
 """
 
 # Global variable, designed to be customizable for user
-SUBREDDIT_NAME = "NosasFlairTest"
+SUBREDDIT_NAME = "TeenWolf"
 removed_submissions_filename = "removed_submissions.txt"
 processed_submissions_filename = "processed_submissions.txt"
 
-remove_post_subject = "Your post requires a flair."
-remove_post_body = "[Your recent post]({url}) in /r/{subreddit} does not have any flair and has been removed. " \
-                    "Please add flair to the post and [message the moderators with this message.]({msg})"
+remove_post_subject = "Your post requires a link flair."
+remove_post_body = "[Your recent post]({url}) in /r/{subreddit} does not have any link flair and has been removed. " \
+                    "Please add a link flair to the post and [message the moderators with this message.]({msg})"
 
 mod_mail_subject = "Flair Added"
 
@@ -47,16 +48,15 @@ class Bot:
         self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
         self.processed_submissions = self.read_submission_list_from_file(processed_submissions_filename)
 
-
     # Grab the 10 most recent posts on the subreddit and check the submissions for flairs
     def check_new_submissions(self):
         # Grab the 10 most recent submissions
         print "    Getting new submissions ..."
-        for submission in self.subreddit.get_new(limit=10):
+        for submission in self.subreddit.get_new(limit=5):
             # If the current post hasn't been processed yet, then see if the OP has a flair
             if submission.id not in self.processed_submissions:
                 # If OP has no flair, remove submission, notify user of removal, and add ID to removed_submission list
-                if submission.author_flair_text is None:
+                if submission.link_flair_text is None:
                     # Make sure the author of the post isn't [deleted]
                     try:
                         author = submission.author
@@ -87,7 +87,7 @@ class Bot:
 
             # If OP has a flair now, approve their post, add the ID to processed_submissions list
             # This will prevent it from being processed/removed again.
-            if submission.author_flair_text is not None:
+            if submission.link_flair_text is not None:
                 submission.approve()
                 print "    Approved submission: {0}".format(submission)
                 self.processed_submissions.append(submission_id)
@@ -154,7 +154,10 @@ if __name__ == '__main__':
     reddit_bot = Bot()
     while True:
         print('{:%H:%M:%S %b %d %Y}'.format(datetime.now()))
-        reddit_bot.run()
-        print("Sleeping for 5 minutes\n")
-        print "= = " * 10
-        time.sleep(60*5)
+        try:
+            reddit_bot.run()
+            print("Sleeping for 5 minutes\n")
+            print "= = " * 10
+            time.sleep(60*30)
+        except:
+            time.sleep(60*10)
