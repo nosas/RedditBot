@@ -1,4 +1,4 @@
-from Projects.RedditBot.login import *
+from login import streamable_login, reddit_login
 import requests
 import json
 import glob
@@ -6,17 +6,14 @@ import os
 import praw
 
 # Directory where videos are stored. Make sure \\ is at the end of the string
-VIDEO_DIRECTORY = "F:\\Users\\Sason\\Videos\\Recordings\\"
+VIDEO_DIRECTORY = "C:\\Users\\Sason\\Desktop\\rec\\"
 SUBREDDIT = "MotoGPHighlights"
+REQUIRED_TAGS = ["[Moto3]", "[Moto2]", "[MotoGP]"]
 
 
 class Bot:
 
     def __init__(self):
-        # Return a dict {"username": "value", "password": "value"}
-        # Values can be retrieved with credentials["username"], credentials["password"]
-        self.credentials = streamable_login()
-
         # Returns the path of the most recently added video
         self.newest_video_path = self.find_newest_video()
 
@@ -57,11 +54,10 @@ class Bot:
 
         user_input = " "
         submission_title = ""
-        required_tag = ["[Moto3]", "[Moto2]", "[MotoGP]"]
 
         while user_input != "":
             submission_title = raw_input("Enter submission title: ")
-            if len(submission_title) < 8 or submission_title.split()[0] not in required_tag:
+            if len(submission_title) < 8 or submission_title.split()[0] not in REQUIRED_TAGS:
                 print "****Make sure title starts with [Moto3], [Moto2], [MotoGP] (with a space after)"
             else:
                 user_input = raw_input("    Do you want to modify the title? (leave blank for no): ")
@@ -74,19 +70,18 @@ class Bot:
     @staticmethod
     # Sets link flair for the submission
     def set_reddit_flair(submission):
-        flair_list = ["Race", "Free Practice", "Warm-Up", "Post-Race", "Celebration", "Interview", "Conference"]
+        flair_list = [item["flair_text"] for item in submission.get_flair_choices()["choices"]]
         print "\nFlair List = " + ", ".join(flair_list)
 
         flair_choice = raw_input("Select a flair: ")
 
         while flair_choice not in flair_list:
-            flair_choice = raw_input("Select a flair in the list: ")
+            flair_choice = raw_input("Select a flair in the flair list: ")
 
         submission.set_flair(flair_choice)
 
     def run(self):
         self.post_to_reddit()
-
 
 if __name__ == '__main__':
     motoBot = Bot()
