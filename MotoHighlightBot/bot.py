@@ -1,4 +1,4 @@
-from Projects.RedditBot.login import *
+from login import streamable_login, reddit_login
 import requests
 import json
 import glob
@@ -6,7 +6,7 @@ import os
 import praw
 
 # Directory where videos are stored. Make sure \\ is at the end of the string
-VIDEO_DIRECTORY = "F:\\Users\\Sason\\Videos\\Recordings\\"
+VIDEO_DIRECTORY = "C:\\Users\\Sason\\Desktop\\rec\\"
 SUBREDDIT = "MotoGPHighlights"
 REQUIRED_TAGS = ["[Moto3]", "[Moto2]", "[MotoGP]"]
 
@@ -69,29 +69,55 @@ class Bot:
 
     @staticmethod
     # Sets link flair for the submission
+    # TODO: Split into multiple methods
     def set_reddit_flair(submission):
-        flair_list = sorted(set([item["flair_text"] for item in submission.get_flair_choices()["choices"]]))
+        # Returns a sorted list of all the available link flairs
+        # Some flairs are denoted as CountryName - TrackName due to multiple races in the same country
+        flair_list = sorted(set([flair["flair_text"] for flair in submission.get_flair_choices()["choices"]]))
+        country_list = sorted(set([countries.split(" - ")[0] for countries in flair_list]))
+        track_list = sorted(tracks.split(" - ")[1] for tracks in flair_list if " - " in tracks)
+        # Dict with CountryName:[TrackName(s)]
         track_dict = {}
+
         for flair in flair_list:
+            # If the flair has a hyphen ("-"), then split it and add the flair to the track_dict
             if " - " in flair:
                 country_name, track_name = flair.split(" - ")
-                if track_dict[country_name] is not None:
+                # If the value hasn't been created yet, then create key:[value], with value being a list of track names
+                if country_name not in track_dict:
                     track_dict[country_name] = [track_name]
                 else:
                     track_dict[country_name].append(track_name)
 
-        print "\nFlair List = " + ", ".join(sorted(set([item.split(" - ")[0] for item in flair_list])))
-        flair_choice = raw_input("Select a flair: ")
+        # User selects a country from the flair_list. If the country is in the track_dict and the country has multiple
+        # tracks, list the track names and allow for the user to select a track from the list.
+        # Else, the country only has one track, so select that country as the flair_choice
+        country_choice = ""
+        track_choice = ""
+        flair_choice = ""
 
-        if flair_choice in track_dict:
+        print "\nCountry List = " + ", ".join(country_list)
+        while country_choice not in country_list:
+            user_choice = raw_input("Select a country: ")
+            if raw_input("    Do you want to modify your choice? (Leave blank for no): ") == "":
+                country_choice = user_choice
+
+        if country_choice in track_dict:
             # If the country has one track, select that track
             # Else, list the track names
             # Reconstruct flair_choice to be CountryName - TrackName
+            if len(track_dict[country_choice]) == 1:
+                track_choice = track_dict[country_choice][0]
+            else:
+                print "Track List = " + ", ".join(track_dict[country_choice])
+                while track_choice not in track_dict[country_choice]:
+                    user_choice = raw_input("Select a track: ")
+                    if raw_input("    Do you want to modify your choice? (Leave blank for no): ") == "":
+                        track_choice = user_choice
 
-            pass
-
-        while flair_choice not in flair_list:
-            flair_choice = raw_input("Select a flair in the flair list: ")
+            flair_choice = country_choice + " - " + track_choice
+        else:
+            flair_choice = country_choice
 
         submission.set_flair(flair_choice)
 
