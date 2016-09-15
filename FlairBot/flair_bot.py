@@ -13,7 +13,7 @@ Actions required to implement:
 import time
 from datetime import datetime
 import praw
-from login import reddit_login
+from Projects.RedditBot.login import reddit_login
 
 """
 TODO:

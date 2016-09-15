@@ -21,7 +21,7 @@ from datetime import date
 import random
 
 
-# Global variables, set to be customizable for user
+# Global variables, designed to be customizable for user
 USERNAME = ""
 PASSWORD = ""
 SUBREDDIT_NAME = "CharacterForge"

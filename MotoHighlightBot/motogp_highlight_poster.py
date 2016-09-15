@@ -1,4 +1,4 @@
-from login import streamable_login, reddit_login
+from Projects.RedditBot.login import *
 import requests
 import json
 import glob
@@ -6,7 +6,7 @@ import os
 import praw
 
 # Directory where videos are stored. Make sure \\ is at the end of the string
-VIDEO_DIRECTORY = "C:\\Users\\Sason\\Desktop\\rec\\"
+VIDEO_DIRECTORY = "F:\\Users\\Sason\\Videos\\Recordings\\"
 SUBREDDIT = "MotoGPHighlights"
 REQUIRED_TAGS = ["[Moto3]", "[Moto2]", "[MotoGP]"]
 
