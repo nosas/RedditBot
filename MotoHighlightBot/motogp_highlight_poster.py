@@ -22,6 +22,8 @@ VIDEO_DIRECTORY = "F:\\Users\\Sason\\Videos\\Recordings\\"
 SUBREDDIT = "MotoGPHighlights"
 REQUIRED_TAGS = ["[Moto3]", "[Moto2]", "[MotoGP]"]
 
+# TODO: Possibly implement gfycat api?
+
 
 class Bot:
 
