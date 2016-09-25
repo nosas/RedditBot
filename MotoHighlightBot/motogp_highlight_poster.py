@@ -92,7 +92,7 @@ class Bot:
         # should have a link flair.
         next(previous_submissions)
         previous_flair = next(previous_submissions).link_flair_text
-        if raw_input("\nType any letter to use \"" + previous_flair + "\", leave blank for new flair: ") != "":
+        if raw_input("\nType any letter to choose new flair, leave blank for \"" + previous_flair + "\": ") == "":
             return previous_flair
 
         # User selects a country from keys in track_dict. If the country is in track_dict and the country has multiple
