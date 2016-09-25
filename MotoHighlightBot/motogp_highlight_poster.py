@@ -30,6 +30,8 @@ class Bot:
     def __init__(self):
         # Returns the path of the most recently added video
         self.newest_video_path = self._find_newest_video()
+        self.reddit = praw.Reddit(user_agent="Automatically upload and post to r/MotoGPHighlights by /u/nosas")
+
 
     @staticmethod
     # Locates and returns the most recently added video in the given directory (VIDEO_DIRECTORY)
@@ -63,27 +65,36 @@ class Bot:
     # Logs into Reddit and posts to the specified subreddit
     def _post_to_reddit(self):
         print "Logging in to Reddit ..."
-        reddit = praw.Reddit(user_agent="Script that automatically uploads and posts to r/MotoGPHighlights by /u/nosas")
-        reddit_login(reddit)
+        reddit_login(self.reddit)
 
         user_input = " "
         submission_title = ""
 
         while user_input != "":
-            submission_title = raw_input("Enter submission title: ")
+            submission_title = raw_input("\nEnter submission title: ")
             if len(submission_title) < 8 or submission_title.split()[0] not in REQUIRED_TAGS:
                 print "****Make sure title starts with [Moto3], [Moto2], [MotoGP] (with a space after)"
             else:
                 user_input = raw_input("    Do you want to modify the title? (leave blank for no): ")
 
-        submission = reddit.submit(SUBREDDIT, submission_title, url=self._upload_to_streamable())
-        self._set_reddit_flair(submission)
+        submission = self.reddit.submit(SUBREDDIT, submission_title, url=self._upload_to_streamable())
+        submission.set_flair(self._choose_reddit_flair(submission.get_flair_choices()))
 
         print "\nSubmission posted: " + submission.permalink
 
-    # Sets link flair for the submission
-    def _set_reddit_flair(self, submission):
-        track_dict = self._parse_reddit_flair_list(submission.get_flair_choices())
+    # Returns link flair for the submission
+    def _choose_reddit_flair(self, flair_choices):
+        track_dict = self._parse_reddit_flair_list(flair_choices)
+
+        # Get the most recently posted submission's flair, and choose whether to use that flair or pick a new one.
+        previous_submissions = self.reddit.get_subreddit(SUBREDDIT).get_new(limit=2)
+        # The first submission is the one create just now. The second submission is the second most recent post which
+        # should have a link flair.
+        next(previous_submissions)
+        previous_flair = next(previous_submissions).link_flair_text
+        if raw_input("\nType any letter to use \"" + previous_flair + "\", leave blank for new flair: ") != "":
+            return previous_flair
+
         # User selects a country from keys in track_dict. If the country is in track_dict and the country has multiple
         # tracks, list the track names corresponding the the country and allow for the user to select a track from
         # the list. Else, the country only has one track, so select that country as the flair_choice
@@ -108,13 +119,11 @@ class Bot:
                     if raw_input("    Do you want to modify your choice? (Leave blank for no): ") == "":
                         track_choice = user_choice
 
-            flair_choice = country_choice + " - " + track_choice
+            return country_choice + " - " + track_choice
         else:
             # Some countries are not in CountryName - TrackName format, because they only have one track, so they
             # will not be in the track_dict.
-            flair_choice = country_choice
-
-        submission.set_flair(flair_choice)
+            return country_choice
 
     @staticmethod
     # Returns a dict based denoted as {CountryName:[TrackName(s)]} based on the submission's flair choices
@@ -135,6 +144,8 @@ class Bot:
                     track_dict[country_name] = [track_name]
                 else:
                     track_dict[country_name].append(track_name)
+            else:
+                track_dict[flair] = []
 
         return track_dict
 
