@@ -48,9 +48,9 @@ class Bot:
         self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
         self.processed_submissions = self.read_submission_list_from_file(processed_submissions_filename)
 
-    # Grab the 10 most recent posts on the subreddit and check the submissions for flairs
+    # Grab the 5 most recent posts on the subreddit and check the submissions for flairs
     def check_new_submissions(self):
-        # Grab the 10 most recent submissions
+        # Grab the 5 most recent submissions
         print "    Getting new submissions ..."
         for submission in self.subreddit.get_new(limit=5):
             # If the current post hasn't been processed yet, then see if the OP has a flair
@@ -156,7 +156,7 @@ if __name__ == '__main__':
         print('{:%H:%M:%S %b %d %Y}'.format(datetime.now()))
         try:
             reddit_bot.run()
-            print("Sleeping for 5 minutes\n")
+            print("Sleeping for 30 minutes\n")
             print "= = " * 10
             time.sleep(60*30)
         except:
