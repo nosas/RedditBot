@@ -13,7 +13,7 @@ Actions required to implement:
 import time
 from datetime import datetime
 import praw
-from Projects.RedditBot.login import reddit_login
+from Projects.RedditBot.login import reddit_bot_login
 
 """
 TODO:
@@ -23,14 +23,24 @@ TODO:
     - Allow bot to run for certain # of cycles, then clean memory after # of cycles to prevent eating of memory??
 """
 
-# Global variable, designed to be customizable for user
-SUBREDDIT_NAME = "TeenWolf"
+# Global variables, designed to be customizable for user
+# SUBREDDIT_NAMES = "MotoGPHighlights+NosasFlairTest"
+SUBREDDIT_NAMES = "TeenWolf+Voltron"
+
 removed_submissions_filename = "removed_submissions.txt"
 processed_submissions_filename = "processed_submissions.txt"
 
 remove_post_subject = "Your post requires a link flair."
 remove_post_body = "[Your recent post]({url}) in /r/{subreddit} does not have any link flair and has been removed. " \
                     "Please add a link flair to the post and [message the moderators with this message.]({msg})"
+
+remove_comment_text = "/r/{subreddit} requires you to flair your submissions! This submission has been automatically " \
+                      "removed but will be re-approved (and this comment deleted) once proper flair has been assigned."\
+                      "\n\n To add flair, open your submission and click the button labeled \"flair\" beneath your" \
+                      " title. From the menu, select the most appropriate category, and then hit save. You do not need"\
+                      "to delete or re-submit your post!" \
+                      "\n\n Don't blame me. I'm just a bot."
+
 
 mod_mail_subject = "Flair Added"
 
@@ -41,8 +51,8 @@ class Bot:
         # Initialize Reddit
         self.r = praw.Reddit(user_agent="A flair mod by /u/nosas for /r/NosasFlairTest")
         print "Logging in ...\n"
-        reddit_login(self.r)
-        self.subreddit = self.r.get_subreddit(SUBREDDIT_NAME)
+        reddit_bot_login(self.r)
+        self.subreddits = self.r.get_subreddit(SUBREDDIT_NAMES)
 
         # Global variables to keep track of submissions that are removed/resolved
         self.removed_submissions = self.read_submission_list_from_file(removed_submissions_filename)
@@ -52,7 +62,7 @@ class Bot:
     def check_new_submissions(self):
         # Grab the 10 most recent submissions
         print "    Getting new submissions ..."
-        for submission in self.subreddit.get_new(limit=5):
+        for submission in self.subreddits.get_new(limit=10):
             # If the current post hasn't been processed yet, then see if the OP has a flair
             if submission.id not in self.processed_submissions:
                 # If OP has no flair, remove submission, notify user of removal, and add ID to removed_submission list
@@ -71,9 +81,8 @@ class Bot:
                     print "    Removed submission: {0}".format(submission)
                     self.removed_submissions.append(submission.id)
                     # Notify user why their post was deleted
-                    self.r.send_message(author, remove_post_subject, remove_post_body.format(
-                        url=submission.url, subreddit=SUBREDDIT_NAME, msg=self.create_mod_mail_url(submission.url)))
-                    print "    Sending message to author ..."
+                    submission.add_comment(remove_comment_text.format(subreddit=submission.subreddit))
+                    print "        Posted removal comment"
 
         print "    Finished new submissions"
 
@@ -81,24 +90,27 @@ class Bot:
     def check_removed_submissions(self):
         # Check each post from the removed_submissions list for flairs
         for submission_id in self.removed_submissions:
-            # Create a url with the subreddit and post ID in order to obtain PRAW's submission object
-            url = "https://www.reddit.com/r/{0}/comments/{1}".format(SUBREDDIT_NAME, submission_id)
-            submission = self.r.get_submission(url=url)
+            # Retrieve the submission with the submission_id from removed_list
+            submission = self.r.get_submission(submission_id=submission_id)
 
-            # If OP has a flair now, approve their post, add the ID to processed_submissions list
+            # If OP has a flair now, approve their post, add the ID to processed_submissions list, remove bot comment
             # This will prevent it from being processed/removed again.
             if submission.link_flair_text is not None:
                 submission.approve()
                 print "    Approved submission: {0}".format(submission)
+                for comment in submission.comments:
+                    if str(comment.author) == "the_flair_bot":
+                        comment.delete()
+                        print "        Deleted removal comment"
                 self.processed_submissions.append(submission_id)
 
         print "    Finished removed submissions"
 
     @staticmethod
     # Method to create a URL that the user can easily send to mods' mailboxes to access their removed submission
-    def create_mod_mail_url(submission_url):
+    def create_mod_mail_url(submission):
         mod_mail_url = "http://www.reddit.com/message/compose/?to=/r/{0}&subject={1}&message={2}"\
-                        .format(SUBREDDIT_NAME, mod_mail_subject, submission_url)
+                        .format(submission.subreddit, mod_mail_subject, submission.url)
         return mod_mail_url
 
     # Will remove IDs from removed_submissions list if they've been processed/approved
@@ -156,8 +168,9 @@ if __name__ == '__main__':
         print('{:%H:%M:%S %b %d %Y}'.format(datetime.now()))
         try:
             reddit_bot.run()
-            print("Sleeping for 5 minutes\n")
+            print("Sleeping for 10 minutes\n")
             print "= = " * 10
-            time.sleep(60*30)
+            time.sleep(60*10)
         except:
+            # In rare cases where internet or RPi die turn off
             time.sleep(60*10)
