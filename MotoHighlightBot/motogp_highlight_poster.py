@@ -78,7 +78,8 @@ class Bot:
                 user_input = raw_input("    Do you want to modify the title? (leave blank for no): ")
 
         submission = self.reddit.submit(SUBREDDIT, submission_title, url=self._upload_to_streamable())
-        submission.set_flair(self._choose_reddit_flair(submission.get_flair_choices()))
+        user_flair_choice = self._choose_reddit_flair(submission.get_flair_choices())
+        submission.set_flair(flair_text=user_flair_choice, flair_css_class=user_flair_choice.split()[0].lower())
 
         print "\nSubmission posted: " + submission.permalink
 
